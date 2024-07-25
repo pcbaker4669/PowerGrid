@@ -56,12 +56,28 @@ class Model:
                     substation = random.choice(range(self.num_substations))
                     self.G.add_edge(f'P{plant}', f'S{substation}', capacity=random.randint(50, 100))
 
+        # Ensure each substation is connected to at least one consumer
+        for substation in range(self.num_substations):
+            connected = False
+            for consumer in range(self.num_consumers):
+                if self.G.has_edge(f'S{substation}', f'C{consumer}'):
+                    connected = True
+                    break
+            if not connected:
+                # If the substation is not connected to any consumer, connect it to a random consumer
+                consumer = random.choice(range(self.num_consumers))
+                self.G.add_edge(f'S{substation}', f'C{consumer}', capacity=random.randint(20, 50))
 
-
-        # Connect substations to consumers, edges (with transmission capacity)
+        # Connect remaining consumers to substations, edges (with transmission capacity)
         for consumer in range(self.num_consumers):
-            substation = random.choice(range(self.num_substations))
-            self.G.add_edge(f'S{substation}', f'C{consumer}', capacity=random.randint(20, 50))
+            connected = False
+            for substation in range(self.num_substations):
+                if self.G.has_edge(f'S{substation}', f'C{consumer}'):
+                    connected = True
+                    break
+            if not connected:
+                substation = random.choice(range(self.num_substations))
+                self.G.add_edge(f'S{substation}', f'C{consumer}', capacity=random.randint(20, 50))
 
         return self.G
 
@@ -133,3 +149,4 @@ class Model:
                 print(f"{node}: Received {agent.received}/{agent.demand} MW")
             elif isinstance(agent, ag.Substation):
                 print(f"{node}: Load {agent.load}/{agent.capacity} MW")
+        return unmet_demand, total_generated, total_consumed
