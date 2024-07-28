@@ -85,9 +85,18 @@ class Model:
         self.agents = {}
         for node, data in self.G.nodes(data=True):
             if data['type'] == 'plant':
-                self.agents[node] = ag.PowerPlant(node, data['capacity'])
+                capital_cost = 1000000  # $1,000,000 initial cost
+                operating_cost = 5000  # $5,000 operating cost per time unit
+                cost_per_mw = 50  # $50 per MW generated
+                self.agents[node] = ag.PowerPlant(node, data['capacity'],
+                                                  capital_cost, operating_cost,
+                                                  cost_per_mw)
             elif data['type'] == 'substation':
-                self.agents[node] = ag.Substation(node, data['capacity'])
+                # Realistic cost values for substations
+                capital_cost = 1000000  # $1,000,000 initial cost per substation
+                operating_cost = 50000  # $50,000 per year operating cost
+                self.agents[node] = ag.Substation(node, data['capacity'],
+                                                  capital_cost, operating_cost)
             elif data['type'] == 'consumer':
                 self.agents[node] = ag.Consumer(node, data['demand'])
 
@@ -150,3 +159,20 @@ class Model:
             elif isinstance(agent, ag.Substation):
                 print(f"{node}: Load {agent.load}/{agent.capacity} MW")
         return unmet_demand, total_generated, total_consumed
+
+    def calculate_costs(self):
+        total_capital_cost = sum(agent.capital_cost for agent in self.agents.values() if
+                                 isinstance(agent, ag.PowerPlant) or
+                                 isinstance(agent, ag.Substation))
+        total_operating_cost = sum(agent.operating_cost for agent in self.agents.values() if
+                                   isinstance(agent, ag.PowerPlant) or
+                                   isinstance(agent, ag.Substation))
+        total_generation_cost = sum(agent.generated * agent.cost_per_mw for
+                                    agent in self.agents.values() if
+                                    isinstance(agent, ag.PowerPlant))
+
+        print(f"Total Capital Cost: ${total_capital_cost}")
+        print(f"Total Operating Cost: ${total_operating_cost}")
+        print(f"Total Generation Cost: ${total_generation_cost}")
+
+        return total_capital_cost, total_operating_cost, total_generation_cost

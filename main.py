@@ -99,6 +99,8 @@ def run():
     power_model.simulate_power_flow()
     # Analyze results
     vals = power_model.analyze_results()
+    costs = power_model.calculate_costs()
+
     unmet_demand_vint.set(vals[0])
     unmet_demand_ent.configure(textvariable=unmet_demand_vint)
     tot_gen_vint.set(vals[1])
