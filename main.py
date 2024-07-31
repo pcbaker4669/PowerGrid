@@ -83,6 +83,40 @@ tot_consumed_lbl.grid(row=2, column=0)
 tot_consumed_ent = Entry(output_frm, textvariable=tot_consumed_vint)
 tot_consumed_ent.grid(row=2, column=1)
 
+# Grid Capital cost
+tot_cap_cost_vint = IntVar()
+tot_cap_cost_vint.set(0)
+tot_cap_cost_lbl = Label(output_frm, text="Total Capital Cost ($):")
+tot_cap_cost_lbl.grid(row=3, column=0)
+tot_cap_cost_ent = Entry(output_frm, textvariable=tot_cap_cost_vint)
+tot_cap_cost_ent.grid(row=3, column=1)
+
+# Grid Operational cost
+tot_op_cost_vint = IntVar()
+tot_op_cost_vint.set(0)
+tot_op_cost_lbl = Label(output_frm, text="Total Operational Cost ($):")
+tot_op_cost_lbl.grid(row=4, column=0)
+tot_op_cost_ent = Entry(output_frm, textvariable=tot_op_cost_vint)
+tot_op_cost_ent.grid(row=4, column=1)
+
+# Grid Operational cost
+tot_per_mw_cost_vint = IntVar()
+tot_per_mw_cost_vint.set(0)
+tot_per_mw_cost_lbl = Label(output_frm, text="Total Per/MW Cost ($):")
+tot_per_mw_cost_lbl.grid(row=5, column=0)
+tot_per_mw_cost_ent = Entry(output_frm, textvariable=tot_per_mw_cost_vint)
+tot_per_mw_cost_ent.grid(row=5, column=1)
+
+# Total Payments by Consumers
+tot_payments_vint = IntVar()
+tot_payments_vint.set(0)
+tot_payments_lbl = Label(output_frm, text="Total Payments ($):")
+tot_payments_lbl.grid(row=6, column=0)
+tot_payments_ent = Entry(output_frm, textvariable=tot_payments_vint)
+tot_payments_ent.grid(row=6, column=1)
+
+
+
 run_btn = Button(widget_frm, text="Run", command=lambda: run())
 run_btn.grid(row=2, column=0, pady=5)
 
@@ -98,15 +132,23 @@ def run():
     # Simulate power flow
     power_model.simulate_power_flow()
     # Analyze results
-    vals = power_model.analyze_results()
     costs = power_model.calculate_costs()
+    tot_cap_cost_vint.set(costs[0])
+    tot_cap_cost_ent.configure(textvariable=tot_cap_cost_vint)
+    tot_op_cost_vint.set(costs[1])
+    tot_op_cost_ent.configure(textvariable=tot_op_cost_vint)
+    tot_per_mw_cost_vint.set(costs[2])
+    tot_per_mw_cost_ent.configure(textvariable=tot_per_mw_cost_vint)
 
+    vals = power_model.analyze_results()
     unmet_demand_vint.set(vals[0])
     unmet_demand_ent.configure(textvariable=unmet_demand_vint)
     tot_gen_vint.set(vals[1])
     tot_gen_ent.configure(textvariable=tot_gen_vint)
     tot_consumed_vint.set(vals[2])
     tot_consumed_ent.configure(textvariable=tot_consumed_vint)
+    tot_payments_vint.set(vals[3])
+    tot_payments_ent.configure(textvariable=tot_payments_vint)
 
     # Visualize the grid
     pos = nx.spring_layout(grid)

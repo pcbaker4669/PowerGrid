@@ -26,10 +26,15 @@ class Substation:
 
 
 class Consumer:
-    def __init__(self, name, demand):
+    def __init__(self, name, demand, rate_per_mwh):
         self.name = name
         self.demand = demand
         self.received = 0
+        self.rate_per_mwh = rate_per_mwh
+        self.payment = 0
+
+    def calculate_payment(self):
+        self.payment = self.received * self.rate_per_mwh
 
     def __str__(self):
         return ("Name: {}, Demand: {}, Received: {}"

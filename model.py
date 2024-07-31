@@ -5,8 +5,10 @@ import random
 # Set random seed for reproducibility (uncomment if needed)
 random.seed(123456)
 
+
 class Model:
-    def __init__(self, num_plants=3, num_substations=2, num_consumers=5, extra_lines_req=0):
+    def __init__(self, num_plants=3, num_substations=2, num_consumers=5,
+                 extra_lines_req=0):
         self.G = nx.Graph()
         self.num_plants = num_plants
         self.num_substations = num_substations
@@ -19,20 +21,24 @@ class Model:
     def create_grid(self):
         # Add power plants
         for i in range(self.num_plants):
-            self.G.add_node(f'P{i}', type='plant', capacity=random.randint(50, 100))
+            self.G.add_node(f'P{i}', type='plant',
+                            capacity=random.randint(50, 100))
 
         # Add substations with capacity
         for i in range(self.num_substations):
-            self.G.add_node(f'S{i}', type='substation', capacity=random.randint(100, 200))
+            self.G.add_node(f'S{i}', type='substation',
+                            capacity=random.randint(100, 200))
 
         # Add consumers
         for i in range(self.num_consumers):
-            self.G.add_node(f'C{i}', type='consumer', demand=random.randint(5, 20))
+            self.G.add_node(f'C{i}', type='consumer',
+                            demand=random.randint(5, 20))
 
         # Ensure each substation is connected to at least one power plant
         for substation in range(self.num_substations):
             plant = random.choice(range(self.num_plants))
-            self.G.add_edge(f'P{plant}', f'S{substation}', capacity=random.randint(50, 100))
+            self.G.add_edge(f'P{plant}', f'S{substation}',
+                            capacity=random.randint(50, 100))
 
         # Additional connections from power plants to substations
         for plant in range(self.num_plants):
@@ -45,7 +51,8 @@ class Model:
                 # If the plant is not connected to any substation, connect it to a random substation
                 substation = random.choice(range(self.num_substations))
                 self.extra_lines_used += 1
-                self.G.add_edge(f'P{plant}', f'S{substation}', capacity=random.randint(50, 100))
+                self.G.add_edge(f'P{plant}', f'S{substation}',
+                                capacity=random.randint(50, 100))
 
             # Optionally, add more connections from power plants to substations
         for plant in range(self.num_plants):
@@ -54,7 +61,8 @@ class Model:
                 for _ in range(extra_to_add):
                     self.extra_lines_used += 1
                     substation = random.choice(range(self.num_substations))
-                    self.G.add_edge(f'P{plant}', f'S{substation}', capacity=random.randint(50, 100))
+                    self.G.add_edge(f'P{plant}', f'S{substation}',
+                                    capacity=random.randint(50, 100))
 
         # Ensure each substation is connected to at least one consumer
         for substation in range(self.num_substations):
@@ -66,7 +74,8 @@ class Model:
             if not connected:
                 # If the substation is not connected to any consumer, connect it to a random consumer
                 consumer = random.choice(range(self.num_consumers))
-                self.G.add_edge(f'S{substation}', f'C{consumer}', capacity=random.randint(20, 50))
+                self.G.add_edge(f'S{substation}', f'C{consumer}',
+                                capacity=random.randint(20, 50))
 
         # Connect remaining consumers to substations, edges (with transmission capacity)
         for consumer in range(self.num_consumers):
@@ -77,7 +86,8 @@ class Model:
                     break
             if not connected:
                 substation = random.choice(range(self.num_substations))
-                self.G.add_edge(f'S{substation}', f'C{consumer}', capacity=random.randint(20, 50))
+                self.G.add_edge(f'S{substation}', f'C{consumer}',
+                                capacity=random.randint(20, 50))
 
         return self.G
 
@@ -98,7 +108,8 @@ class Model:
                 self.agents[node] = ag.Substation(node, data['capacity'],
                                                   capital_cost, operating_cost)
             elif data['type'] == 'consumer':
-                self.agents[node] = ag.Consumer(node, data['demand'])
+                rate_per_mwh = 100  # $100 per MWh consumed
+                self.agents[node] = ag.Consumer(node, data['demand'], rate_per_mwh)
 
         return self.agents
 
@@ -143,22 +154,33 @@ class Model:
                         substation.load -= power_to_transmit
 
     def analyze_results(self):
-        total_generated = sum(agent.generated for agent in self.agents.values() if isinstance(agent, ag.PowerPlant))
-        total_consumed = sum(agent.received for agent in self.agents.values() if isinstance(agent, ag.Consumer))
-        unmet_demand = sum(agent.demand - agent.received for agent in self.agents.values() if isinstance(agent, ag.Consumer))
+        total_generated = sum(agent.generated for agent in self.agents.values() if
+                              isinstance(agent, ag.PowerPlant))
+        total_consumed = sum(agent.received for agent in self.agents.values() if
+                             isinstance(agent, ag.Consumer))
+        unmet_demand = sum(agent.demand - agent.received for
+                           agent in self.agents.values() if
+                           isinstance(agent, ag.Consumer))
+
+        total_payments = 0
+        for node, agent in self.agents.items():
+            if isinstance(agent, ag.Consumer):
+                agent.calculate_payment()
+                total_payments += agent.payment
 
         print(f"Total Power Generated: {total_generated} MW")
         print(f"Total Power Consumed: {total_consumed} MW")
         print(f"Unmet Demand: {unmet_demand} MW")
+        print(f"Total Payments: ${total_payments}")
 
         for node, agent in self.agents.items():
             if isinstance(agent, ag.PowerPlant):
                 print(f"{node}: Generated {agent.generated} MW")
             elif isinstance(agent, ag.Consumer):
-                print(f"{node}: Received {agent.received}/{agent.demand} MW")
+                print(f"{node}: Received {agent.received}/{agent.demand} MW, Payment: ${agent.payment}")
             elif isinstance(agent, ag.Substation):
                 print(f"{node}: Load {agent.load}/{agent.capacity} MW")
-        return unmet_demand, total_generated, total_consumed
+        return unmet_demand, total_generated, total_consumed, total_payments
 
     def calculate_costs(self):
         total_capital_cost = sum(agent.capital_cost for agent in self.agents.values() if
