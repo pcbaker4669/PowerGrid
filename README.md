@@ -15,3 +15,10 @@ For a 100 MW plant, the cost could be $500 million to $1 billion.
 Renewable Energy (Solar, Wind):
 Solar: Around $1,000 to $2,500 per kW, depending on the scale and location.
 Wind: Typically ranges from $1,200 to $2,300 per kW.
+
+In the U.S. electrical grid, the number of substations significantly exceeds 
+the number of power plants. The grid comprises about 6,400 power plants and 
+roughly 55,000 substations. This large number of substations includes high-voltage 
+substations that connect and stabilize the high-voltage transmission systems, 
+as well as step-up and step-down substations used for voltage regulation and 
+distribution.

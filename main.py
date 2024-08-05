@@ -34,29 +34,37 @@ num_plants_lbl.grid(row=0, column=0)
 num_plants_ent = Entry(control_frm, textvariable=num_plants_vint)
 num_plants_ent.grid(row=0, column=1)
 
-# number of substations
-num_subs_vint = IntVar()
-num_subs_vint.set(2)
-num_subs_lbl = Label(control_frm, text="Substations:")
-num_subs_lbl.grid(row=1, column=0)
-num_subs_ent = Entry(control_frm, textvariable=num_subs_vint)
-num_subs_ent.grid(row=1, column=1)
+# number of setup substations
+num_up_subs_vint = IntVar()
+num_up_subs_vint.set(2)
+num_up_subs_lbl = Label(control_frm, text="Stepup Substations:")
+num_up_subs_lbl.grid(row=1, column=0)
+num_up_subs_ent = Entry(control_frm, textvariable=num_up_subs_vint)
+num_up_subs_ent.grid(row=1, column=1)
+
+# number of setdown substations
+num_dwn_subs_vint = IntVar()
+num_dwn_subs_vint.set(2)
+num_dwn_subs_lbl = Label(control_frm, text="Step-down Substations:")
+num_dwn_subs_lbl.grid(row=2, column=0)
+num_dwn_subs_ent = Entry(control_frm, textvariable=num_dwn_subs_vint)
+num_dwn_subs_ent.grid(row=2, column=1)
 
 # number of customers
 num_cust_vint = IntVar()
 num_cust_vint.set(10)
 num_cust_lbl = Label(control_frm, text="Customers:")
-num_cust_lbl.grid(row=2, column=0)
+num_cust_lbl.grid(row=3, column=0)
 num_cust_ent = Entry(control_frm, textvariable=num_cust_vint)
-num_cust_ent.grid(row=2, column=1)
+num_cust_ent.grid(row=3, column=1)
 
 # extra lines used in model
 num_extra_lines_vint = IntVar()
 num_extra_lines_vint.set(2)
 num_extra_lines_lbl = Label(control_frm, text="Extra Lines:")
-num_extra_lines_lbl.grid(row=3, column=0)
+num_extra_lines_lbl.grid(row=4, column=0)
 num_extra_lines_ent = Entry(control_frm, textvariable=num_extra_lines_vint)
-num_extra_lines_ent.grid(row=3, column=1)
+num_extra_lines_ent.grid(row=4, column=1)
 
 # Output
 # Unmet Demand
@@ -124,7 +132,8 @@ run_btn.grid(row=2, column=0, pady=5)
 def run():
     plt.clf()
     # Create the grid
-    power_model = model.Model(num_plants_vint.get(), num_subs_vint.get(),
+    power_model = model.Model(num_plants_vint.get(), num_up_subs_vint.get(),
+                              num_dwn_subs_vint.get(),
                               num_cust_vint.get(), num_extra_lines_vint.get())
     grid = power_model.create_grid()
     # Initialize agents
@@ -154,12 +163,18 @@ def run():
     pos = nx.spring_layout(grid)
 
     node_colors = []
+    edge_labels = []
+    edge_dict = {}
+    for e in grid.edges:
+        edge_dict[e] = grid.edges[e]['capacity']
 
     for n in grid.nodes:
         if grid.nodes[n]['type'] == 'plant':
             node_colors.append('green')
-        elif grid.nodes[n]['type'] == 'substation':
+        elif grid.nodes[n]['type'] == 'stepup':
             node_colors.append('blue')
+        elif grid.nodes[n]['type'] == 'stepdown':
+            node_colors.append('cyan')
         elif grid.nodes[n]['type'] == 'consumer':
             consumer = agents[n]
             if consumer.received >= consumer.demand:
@@ -168,6 +183,7 @@ def run():
                 node_colors.append('darkgray')
 
     nx.draw(grid, pos, with_labels=True, node_color=node_colors)
+    nx.draw_networkx_edge_labels(grid, pos, edge_labels=edge_dict)
     canvas.draw()
     canvas.flush_events()
 
